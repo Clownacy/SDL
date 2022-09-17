@@ -62,29 +62,6 @@ void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
     GX2SetTVEnable(TRUE);
     GX2SetDRCEnable(TRUE);
 
-    /* Wait for vsync */
-    if (renderer->info.flags & SDL_RENDERER_PRESENTVSYNC) {
-        uint32_t swap_count, flip_count;
-        OSTime last_flip, last_vsync;
-        uint32_t wait_count = 0;
-
-        while (true) {
-            GX2GetSwapStatus(&swap_count, &flip_count, &last_flip, &last_vsync);
-
-            if (flip_count >= swap_count) {
-                break;
-            }
-
-            if (wait_count >= 10) {
-                /* GPU timed out */
-                break;
-            }
-
-            wait_count++;
-            GX2WaitForVsync();
-        }
-    }
-
     /* Free the list of render and draw data */
     WIIU_FreeRenderData(data);
     WIIU_TextureDoneRendering(data);

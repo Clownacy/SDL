@@ -29,9 +29,23 @@
 
 #include <gx2/event.h>
 #include <gx2/registers.h>
+#include <gx2/swap.h>
 #include <gx2r/surface.h>
 
 #include <malloc.h>
+
+static int
+WIIU_SDL_SetVSync(SDL_Renderer * renderer, const int vsync)
+{
+    GX2SetSwapInterval(vsync ? 1 : 0);
+
+    if (GX2GetSwapInterval() > 0) {
+        renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
+    } else {
+        renderer->info.flags &= ~SDL_RENDERER_PRESENTVSYNC;
+    }
+    return 0;
+}
 
 SDL_Renderer *WIIU_SDL_CreateRenderer(SDL_Window * window, Uint32 flags)
 {
@@ -70,9 +84,13 @@ SDL_Renderer *WIIU_SDL_CreateRenderer(SDL_Window * window, Uint32 flags)
     renderer->RenderPresent = WIIU_SDL_RenderPresent;
     renderer->DestroyTexture = WIIU_SDL_DestroyTexture;
     renderer->DestroyRenderer = WIIU_SDL_DestroyRenderer;
+    renderer->SetVSync = WIIU_SDL_SetVSync;
     renderer->info = WIIU_RenderDriver.info;
     renderer->driverdata = data;
     renderer->window = window;
+
+    /* Update V-sync */
+    WIIU_SDL_SetVSync(renderer, flags & SDL_RENDERER_PRESENTVSYNC);
 
     /* Prepare shaders */
     WIIU_SDL_CreateShaders();
