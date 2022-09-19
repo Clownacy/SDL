@@ -96,6 +96,7 @@ struct WIIU_RenderData
     WIIU_TextureDrawData *listdraw;
     SDL_Texture windowTex;
     WIIU_DrawState drawState;
+    uint32_t next_flip;
 };
 
 struct WIIU_TexturePlane

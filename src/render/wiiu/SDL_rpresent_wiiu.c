@@ -62,7 +62,7 @@ void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
     GX2SetTVEnable(TRUE);
     GX2SetDRCEnable(TRUE);
 
-    /* Wait for vsync */
+    /* Wait for V-sync, unless we're running late (adaptive V-sync) */
     if (renderer->info.flags & SDL_RENDERER_PRESENTVSYNC) {
         uint32_t swap_count, flip_count;
         OSTime last_flip, last_vsync;
@@ -71,7 +71,8 @@ void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
         while (true) {
             GX2GetSwapStatus(&swap_count, &flip_count, &last_flip, &last_vsync);
 
-            if (flip_count >= swap_count) {
+            if ((int32_t)(data->next_flip - flip_count) <= 0) {
+                data->next_flip = flip_count + 1;
                 break;
             }
 
