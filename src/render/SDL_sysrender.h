@@ -135,6 +135,17 @@ typedef enum
 } SDL_RenderLineMethod;
 
 
+typedef struct SDL_RendererInfoEx
+{
+    const char *name;           /**< The name of the renderer */
+    Uint32 flags;               /**< Supported ::SDL_RendererFlags */
+    Uint32 num_texture_formats; /**< The number of available texture formats */
+    Uint32 texture_formats[32]; /**< The available texture formats */
+    int max_texture_width;      /**< The maximum texture width */
+    int max_texture_height;     /**< The maximum texture height */
+} SDL_RendererInfoEx;
+
+
 /* Define the SDL renderer structure */
 struct SDL_Renderer
 {
@@ -198,7 +209,7 @@ struct SDL_Renderer
     void *(*GetMetalCommandEncoder) (SDL_Renderer * renderer);
 
     /* The current renderer info */
-    SDL_RendererInfo info;
+    SDL_RendererInfoEx info;
 
     /* The window associated with the renderer */
     SDL_Window *window;
@@ -277,7 +288,7 @@ struct SDL_RenderDriver
     SDL_Renderer *(*CreateRenderer) (SDL_Window * window, Uint32 flags);
 
     /* Info about the renderer capabilities */
-    SDL_RendererInfo info;
+    SDL_RendererInfoEx info;
 };
 
 /* Not all of these are available in a given build. Use #ifdefs, etc. */

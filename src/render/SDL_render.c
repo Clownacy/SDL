@@ -656,6 +656,25 @@ QueueCmdGeometry(SDL_Renderer *renderer, SDL_Texture *texture,
 
 static int UpdateLogicalSize(SDL_Renderer *renderer);
 
+#if !SDL_RENDER_DISABLED
+static void
+RenderDriverInfoExToLegacy(SDL_RendererInfo *info_legacy, const SDL_RendererInfoEx *info_ex)
+{
+    Uint32 i;
+
+    info_legacy->name = info_ex->name;
+    info_legacy->flags = info_ex->flags;
+    info_legacy->num_texture_formats = SDL_min(SDL_arraysize(info_legacy->texture_formats), info_ex->num_texture_formats);
+
+    for (i = 0; i < info_legacy->num_texture_formats; ++i) {
+        info_legacy->texture_formats[i] = info_ex->texture_formats[i];
+    }
+
+    info_legacy->max_texture_width = info_ex->max_texture_width;
+    info_legacy->max_texture_height = info_ex->max_texture_height;
+}
+#endif
+
 int
 SDL_GetNumRenderDrivers(void)
 {
@@ -674,7 +693,7 @@ SDL_GetRenderDriverInfo(int index, SDL_RendererInfo * info)
         return SDL_SetError("index must be in the range of 0 - %d",
                             SDL_GetNumRenderDrivers() - 1);
     }
-    *info = render_drivers[index]->info;
+    RenderDriverInfoExToLegacy(info, &render_drivers[index]->info);
     return 0;
 #else
     return SDL_SetError("SDL not built with rendering support");
@@ -1122,7 +1141,7 @@ SDL_GetRendererInfo(SDL_Renderer * renderer, SDL_RendererInfo * info)
 {
     CHECK_RENDERER_MAGIC(renderer, -1);
 
-    *info = renderer->info;
+    RenderDriverInfoExToLegacy(info, &renderer->info);
     return 0;
 }
 
