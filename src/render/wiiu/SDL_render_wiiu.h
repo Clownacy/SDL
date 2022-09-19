@@ -48,6 +48,7 @@ typedef struct WIIU_RenderAllocData WIIU_RenderAllocData;
 typedef struct WIIU_TextureDrawData WIIU_TextureDrawData;
 typedef struct WIIU_DrawState WIIU_DrawState;
 typedef struct WIIU_RenderData WIIU_RenderData;
+typedef struct WIIU_TexturePlane WIIU_TexturePlane;
 typedef struct WIIU_TextureData WIIU_TextureData;
 
 struct WIIU_PixFmt
@@ -97,11 +98,25 @@ struct WIIU_RenderData
     WIIU_DrawState drawState;
 };
 
-struct WIIU_TextureData
+struct WIIU_TexturePlane
 {
     GX2Sampler sampler;
     GX2Texture texture;
     GX2ColorBuffer cbuf;
+};
+
+struct WIIU_TextureData
+{
+    WIIU_TexturePlane main_plane;
+#if SDL_HAVE_YUV
+    /* YUV texture support */
+    WIIU_TexturePlane u_plane;
+    WIIU_TexturePlane v_plane;
+    WIIU_ShaderType shader;
+    void *pixels;
+    int pitch;
+    SDL_bool yuv;
+#endif
     SDL_bool isRendering;
 };
 
@@ -117,6 +132,11 @@ int WIIU_SDL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture);
 int WIIU_SDL_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
                        const SDL_Rect * rect, const void *pixels,
                        int pitch);
+int WIIU_SDL_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
+                    const SDL_Rect * rect,
+                    const Uint8 *Yplane, int Ypitch,
+                    const Uint8 *Uplane, int Upitch,
+                    const Uint8 *Vplane, int Vpitch);
 int WIIU_SDL_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
                      const SDL_Rect * rect, void **pixels, int *pitch);
 void WIIU_SDL_UnlockTexture(SDL_Renderer * renderer, SDL_Texture * texture);
@@ -305,6 +325,11 @@ static inline WIIU_PixFmt WIIU_SDL_GetPixFmt(Uint32 format)
         case SDL_PIXELFORMAT_ARGB2101010: {
             outFmt.fmt = GX2_SURFACE_FORMAT_UNORM_R10_G10_B10_A2;
             outFmt.compMap = GX2_COMP_MAP(GX2_SQ_SEL_G, GX2_SQ_SEL_B, GX2_SQ_SEL_A, GX2_SQ_SEL_R);
+            break;
+        }
+        case SDL_PIXELFORMAT_YV12: {
+            outFmt.fmt = GX2_SURFACE_FORMAT_UNORM_R8;
+            outFmt.compMap = GX2_COMP_MAP(GX2_SQ_SEL_R, GX2_SQ_SEL_0, GX2_SQ_SEL_0, GX2_SQ_SEL_1);
             break;
         }
         default: {

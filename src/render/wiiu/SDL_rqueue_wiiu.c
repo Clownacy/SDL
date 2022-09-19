@@ -251,7 +251,7 @@ static int WIIU_SDL_RenderClear(SDL_Renderer * renderer, SDL_RenderCommand * cmd
     SDL_Texture *target = WIIU_GetRenderTarget(renderer);
     WIIU_TextureData *tdata = (WIIU_TextureData*) target->driverdata;
 
-    GX2ClearColor(&tdata->cbuf,
+    GX2ClearColor(&tdata->main_plane.cbuf,
                   (float) cmd->data.color.r / 255.0f,
                   (float) cmd->data.color.g / 255.0f,
                   (float) cmd->data.color.b / 255.0f,
@@ -268,9 +268,13 @@ static int WIIU_SDL_SetDrawState(WIIU_RenderData * data, const SDL_RenderCommand
     SDL_bool matrixUpdated = SDL_FALSE;
     SDL_bool shaderUpdated = SDL_FALSE;
     const SDL_BlendMode blendMode = cmd->data.draw.blend;
-    WIIU_ShaderType shader = cmd->data.draw.texture ? SHADER_TEXTURE : SHADER_COLOR;
-    WHBGfxShaderGroup* shaderGroup = WIIU_SDL_GetShaderGroup(shader);
     SDL_Texture *texture = cmd->data.draw.texture;
+#if SDL_HAVE_YUV
+    WIIU_ShaderType shader = cmd->data.draw.texture ? ((WIIU_TextureData*)texture->driverdata)->shader : SHADER_COLOR;
+#else
+    WIIU_ShaderType shader = cmd->data.draw.texture ? SHADER_TEXTURE : SHADER_COLOR;
+#endif
+    WHBGfxShaderGroup* shaderGroup = WIIU_SDL_GetShaderGroup(shader);
 
     if (data->drawState.viewportDirty) {
         const SDL_Rect *viewport = &data->drawState.viewport;
@@ -340,8 +344,21 @@ static int WIIU_SDL_SetDrawState(WIIU_RenderData * data, const SDL_RenderCommand
         if (texture) {
             WIIU_TextureData *tdata = (WIIU_TextureData*) texture->driverdata;
             uint32_t location = shaderGroup->pixelShader->samplerVars[0].location;
-            GX2SetPixelTexture(&tdata->texture, location);
-            GX2SetPixelSampler(&tdata->sampler, location);
+            GX2SetPixelTexture(&tdata->main_plane.texture, location);
+            GX2SetPixelSampler(&tdata->main_plane.sampler, location);
+
+#if SDL_HAVE_YUV
+            if (tdata->yuv) {
+                uint32_t u_location = shaderGroup->pixelShader->samplerVars[1].location;
+                uint32_t v_location = shaderGroup->pixelShader->samplerVars[2].location;
+
+                GX2SetPixelTexture(&tdata->u_plane.texture, u_location);
+                GX2SetPixelSampler(&tdata->u_plane.sampler, u_location);
+
+                GX2SetPixelTexture(&tdata->v_plane.texture, v_location);
+                GX2SetPixelSampler(&tdata->v_plane.sampler, v_location);
+            }
+#endif
 
             WIIU_TextureStartRendering(data, tdata);
         }

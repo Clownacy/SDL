@@ -26,6 +26,9 @@
 
 #include "shaders/colorShader.inc"
 #include "shaders/textureShader.inc"
+#include "shaders/textureShaderYUV_JPEG.inc"
+#include "shaders/textureShaderYUV_BT601.inc"
+#include "shaders/textureShaderYUV_BT709.inc"
 
 static WHBGfxShaderGroup shaderGroups[NUM_SHADERS];
 static int shaderRefCount = 0;
@@ -35,6 +38,9 @@ void WIIU_SDL_CreateShaders(void)
     if (!shaderRefCount++) {
         WHBGfxShaderGroup* colorShader = &shaderGroups[SHADER_COLOR];
         WHBGfxShaderGroup* textureShader = &shaderGroups[SHADER_TEXTURE];
+        WHBGfxShaderGroup* textureShaderYUV_JPEG = &shaderGroups[SHADER_YUV_JPEG];
+        WHBGfxShaderGroup* textureShaderYUV_BT601 = &shaderGroups[SHADER_YUV_BT601];
+        WHBGfxShaderGroup* textureShaderYUV_BT709 = &shaderGroups[SHADER_YUV_BT709];
 
         WHBGfxLoadGFDShaderGroup(colorShader, 0, colorShader_gsh);
         WHBGfxInitShaderAttribute(colorShader, "a_position", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32);
@@ -46,6 +52,24 @@ void WIIU_SDL_CreateShaders(void)
         WHBGfxInitShaderAttribute(textureShader, "a_color", 0, 8, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
         WHBGfxInitShaderAttribute(textureShader, "a_texcoord", 0, 12, GX2_ATTRIB_FORMAT_FLOAT_32_32);
         WHBGfxInitFetchShader(textureShader);
+
+        WHBGfxLoadGFDShaderGroup(textureShaderYUV_JPEG, 0, textureShaderYUV_JPEG_gsh);
+        WHBGfxInitShaderAttribute(textureShaderYUV_JPEG, "a_position", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+        WHBGfxInitShaderAttribute(textureShaderYUV_JPEG, "a_color", 0, 8, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
+        WHBGfxInitShaderAttribute(textureShaderYUV_JPEG, "a_texcoord", 0, 12, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+        WHBGfxInitFetchShader(textureShaderYUV_JPEG);
+
+        WHBGfxLoadGFDShaderGroup(textureShaderYUV_BT601, 0, textureShaderYUV_BT601_gsh);
+        WHBGfxInitShaderAttribute(textureShaderYUV_BT601, "a_position", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+        WHBGfxInitShaderAttribute(textureShaderYUV_BT601, "a_color", 0, 8, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
+        WHBGfxInitShaderAttribute(textureShaderYUV_BT601, "a_texcoord", 0, 12, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+        WHBGfxInitFetchShader(textureShaderYUV_BT601);
+
+        WHBGfxLoadGFDShaderGroup(textureShaderYUV_BT709, 0, textureShaderYUV_BT709_gsh);
+        WHBGfxInitShaderAttribute(textureShaderYUV_BT709, "a_position", 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+        WHBGfxInitShaderAttribute(textureShaderYUV_BT709, "a_color", 0, 8, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8);
+        WHBGfxInitShaderAttribute(textureShaderYUV_BT709, "a_texcoord", 0, 12, GX2_ATTRIB_FORMAT_FLOAT_32_32);
+        WHBGfxInitFetchShader(textureShaderYUV_BT709);
     }
 }
 
@@ -54,6 +78,9 @@ void WIIU_SDL_DestroyShaders(void)
     if (!--shaderRefCount) {
         WHBGfxFreeShaderGroup(&shaderGroups[SHADER_COLOR]);
         WHBGfxFreeShaderGroup(&shaderGroups[SHADER_TEXTURE]);
+        WHBGfxFreeShaderGroup(&shaderGroups[SHADER_YUV_JPEG]);
+        WHBGfxFreeShaderGroup(&shaderGroups[SHADER_YUV_BT601]);
+        WHBGfxFreeShaderGroup(&shaderGroups[SHADER_YUV_BT709]);
     }
 }
 

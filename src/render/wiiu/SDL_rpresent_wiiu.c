@@ -44,11 +44,11 @@ void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
 
     /* Only render to TV if the window is *not* drc-only */
     if (!(flags & SDL_WINDOW_WIIU_GAMEPAD_ONLY)) {
-        GX2CopyColorBufferToScanBuffer(&tdata->cbuf, GX2_SCAN_TARGET_TV);
+        GX2CopyColorBufferToScanBuffer(&tdata->main_plane.cbuf, GX2_SCAN_TARGET_TV);
     }
 
     if (!(flags & SDL_WINDOW_WIIU_TV_ONLY)) {
-        GX2CopyColorBufferToScanBuffer(&tdata->cbuf, GX2_SCAN_TARGET_DRC);
+        GX2CopyColorBufferToScanBuffer(&tdata->main_plane.cbuf, GX2_SCAN_TARGET_DRC);
     }
 
     /* Swap buffers */

@@ -56,6 +56,9 @@ SDL_Renderer *WIIU_SDL_CreateRenderer(SDL_Window * window, Uint32 flags)
     renderer->SupportsBlendMode = WIIU_SDL_SupportsBlendMode;
     renderer->CreateTexture = WIIU_SDL_CreateTexture;
     renderer->UpdateTexture = WIIU_SDL_UpdateTexture;
+#if SDL_HAVE_YUV
+    renderer->UpdateTextureYUV = WIIU_SDL_UpdateTextureYUV;
+#endif
     renderer->LockTexture = WIIU_SDL_LockTexture;
     renderer->UnlockTexture = WIIU_SDL_UnlockTexture;
     renderer->SetTextureScaleMode = WIIU_SDL_SetTextureScaleMode;
@@ -182,6 +185,10 @@ int WIIU_SDL_SetRenderTarget(SDL_Renderer * renderer, SDL_Texture * texture)
     WIIU_TextureData *tdata = (WIIU_TextureData *)((texture) ? texture->driverdata
                                                              : data->windowTex.driverdata);
 
+    if (texture != NULL && SDL_ISPIXELFORMAT_FOURCC(texture->format)) {
+        return SDL_SetError("Cannot render to FOURCC format texture");
+    }
+
     /* make sure we're using the correct renderer ctx */
     GX2SetContextState(data->ctx);
 
@@ -191,7 +198,7 @@ int WIIU_SDL_SetRenderTarget(SDL_Renderer * renderer, SDL_Texture * texture)
     data->drawState.viewportDirty = SDL_TRUE;
 
     /* Update context state */
-    GX2SetColorBuffer(&tdata->cbuf, GX2_RENDER_TARGET_0);
+    GX2SetColorBuffer(&tdata->main_plane.cbuf, GX2_RENDER_TARGET_0);
 
     return 0;
 }
@@ -224,23 +231,25 @@ int WIIU_SDL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
     Uint8 *src_image;
     int ret;
 
+    /* TODO: Byte-swap the 565 formats */
+
     /* NOTE: The rect is already adjusted according to the viewport by
        SDL_RenderReadPixels */
 
-    if (rect->x < 0 || rect->x+rect->w > tdata->cbuf.surface.width ||
-        rect->y < 0 || rect->y+rect->h > tdata->cbuf.surface.height) {
+    if (rect->x < 0 || rect->x+rect->w > tdata->main_plane.cbuf.surface.width ||
+        rect->y < 0 || rect->y+rect->h > tdata->main_plane.cbuf.surface.height) {
         return SDL_SetError("Tried to read outside of surface bounds");
     }
 
-    src_image = GX2RLockSurfaceEx(&tdata->cbuf.surface, 0, GX2R_RESOURCE_LOCKED_READ_ONLY);
+    src_image = GX2RLockSurfaceEx(&tdata->main_plane.cbuf.surface, 0, GX2R_RESOURCE_LOCKED_READ_ONLY);
 
     /* Convert and copy the pixels to target buffer */
     ret = SDL_ConvertPixels(rect->w, rect->h, target->format,
-                            src_image + rect->y * tdata->cbuf.surface.pitch + rect->x * 4,
-                            tdata->cbuf.surface.pitch,
+                            src_image + rect->y * tdata->main_plane.cbuf.surface.pitch + rect->x * 4,
+                            tdata->main_plane.cbuf.surface.pitch,
                             format, pixels, pitch);
 
-    GX2RUnlockSurfaceEx(&tdata->cbuf.surface, 0, GX2R_RESOURCE_LOCKED_READ_ONLY);
+    GX2RUnlockSurfaceEx(&tdata->main_plane.cbuf.surface, 0, GX2R_RESOURCE_LOCKED_READ_ONLY);
 
     return ret;
 }
@@ -272,10 +281,13 @@ SDL_RenderDriver WIIU_RenderDriver =
 
             SDL_PIXELFORMAT_ARGB8888,
             SDL_PIXELFORMAT_BGRA8888,
-            SDL_PIXELFORMAT_BGRX8888,
-            SDL_PIXELFORMAT_ABGR8888,
-
-            /* SDL currently has a dumbass limit of 16 formats, so this has to be commented-out... */
+#if SDL_HAVE_YUV
+	    SDL_PIXELFORMAT_YV12,
+	    SDL_PIXELFORMAT_IYUV,
+#endif
+            /* SDL currently has a dumbass limit of 16 formats, so these have to be commented-out... */
+            /*SDL_PIXELFORMAT_BGRX8888,*/
+            /*SDL_PIXELFORMAT_ABGR8888,*/
             /*SDL_PIXELFORMAT_ARGB2101010,*/
         },
         .max_texture_width = 0,

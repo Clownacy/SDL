@@ -1,0 +1,50 @@
+; $MODE = "UniformRegister"
+
+; $NUM_SPI_PS_INPUT_CNTL = 2
+; v_color R0
+; $SPI_PS_INPUT_CNTL[0].SEMANTIC = 0
+; $SPI_PS_INPUT_CNTL[0].DEFAULT_VAL = 1
+; v_texCoord R1
+; $SPI_PS_INPUT_CNTL[1].SEMANTIC = 1
+; $SPI_PS_INPUT_CNTL[1].DEFAULT_VAL = 1
+
+; $SAMPLER_VARS[0].name = "u_textureY"
+; $SAMPLER_VARS[0].type = "SAMPLER2D"
+; $SAMPLER_VARS[0].location = 0
+
+; $SAMPLER_VARS[1].name = "u_textureU"
+; $SAMPLER_VARS[1].type = "SAMPLER2D"
+; $SAMPLER_VARS[1].location = 1
+
+; $SAMPLER_VARS[2].name = "u_textureV"
+; $SAMPLER_VARS[2].type = "SAMPLER2D"
+; $SAMPLER_VARS[2].location = 2
+
+; --------  Disassembly --------------------
+00 TEX: ADDR(64) CNT(3) VALID_PIX 
+      0  SAMPLE R2.x___, R1.xy0x, t0, s0
+      1  SAMPLE R2._x__, R1.xy0x, t1, s1
+      2  SAMPLE R2.__x_, R1.xy0x, t2, s2
+01 ALU: ADDR(32) CNT(25) 
+      3  x: ADD         R2.x,  R2.x,  -0.0627451017f     
+         y: ADD         R2.y,  R2.y,  -0.501960814f      
+         z: ADD         R2.z,  R2.z,  -0.501960814f      
+         w: MUL         R3.w,  R0.w,  1.0f      
+      4  x: DOT4        R1.x,  PV3.x,  1.1644f      
+         y: DOT4        ____,  PV3.y,  0.0f      
+         z: DOT4        ____,  PV3.z,  1.7927f   
+         w: DOT4        ____,  -0.0f,  0.0f      
+      5  x: DOT4        ____,  R2.x,  1.1644f      
+         y: DOT4        R1.y,  R2.y,  -0.2132f      
+         z: DOT4        ____,  R2.z,  -0.5329f      
+         w: DOT4        ____,  -0.0f,  0.0f      
+         t: MUL         R3.x,  R0.x,  R1.x      
+      6  x: DOT4        ____,  R2.x,  1.1644f      
+         y: DOT4        ____,  R2.y,  2.1124f      
+         z: DOT4        R1.z,  R2.z,  0.0f      
+         w: DOT4        ____,  -0.0f,  0.0f      
+         t: MUL         R3.y,  R0.y,  R1.y      
+      7  z: MUL         R3.z,  R0.z,  R1.z      
+02 EXP_DONE: PIX0, R3
+END_OF_PROGRAM
+

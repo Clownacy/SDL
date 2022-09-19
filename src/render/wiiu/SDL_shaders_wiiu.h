@@ -31,6 +31,9 @@ typedef enum {
     SHADER_INVALID = -1,
     SHADER_COLOR,
     SHADER_TEXTURE,
+    SHADER_YUV_JPEG,
+    SHADER_YUV_BT601,
+    SHADER_YUV_BT709,
     NUM_SHADERS
 } WIIU_ShaderType;
 
