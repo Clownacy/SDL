@@ -42,6 +42,9 @@ void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
     WIIU_TextureData *tdata = (WIIU_TextureData *) data->windowTex.driverdata;
     Uint32 flags = SDL_GetWindowFlags(renderer->window);
 
+    /* Make sure rendering is finished so that we don't see an incomplete image. */
+    GX2DrawDone();
+
     /* Only render to TV if the window is *not* drc-only */
     if (!(flags & SDL_WINDOW_WIIU_GAMEPAD_ONLY)) {
         GX2CopyColorBufferToScanBuffer(&tdata->main_plane.cbuf, GX2_SCAN_TARGET_TV);
