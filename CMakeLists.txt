@@ -2542,6 +2542,12 @@ elseif(OS2)
   endif()
 
 elseif(WIIU)
+  if(SDL_MISC)
+    file(GLOB WIIU_MISC_SOURCES ${SDL2_SOURCE_DIR}/src/misc/wiiu/*.c)
+    set(SOURCE_FILES ${SOURCE_FILES} ${WIIU_MISC_SOURCES})
+    set(HAVE_SDL_MISC TRUE)
+  endif()
+
   if(SDL_AUDIO)
     set(SDL_AUDIO_DRIVER_WIIU 1)
     file(GLOB WIIU_AUDIO_SOURCES ${SDL2_SOURCE_DIR}/src/audio/wiiu/*.c)
