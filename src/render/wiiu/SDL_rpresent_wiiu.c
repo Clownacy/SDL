@@ -36,6 +36,18 @@
 #include <gx2r/buffer.h>
 #include <gx2r/draw.h>
 
+int WIIU_SDL_SetVSync(SDL_Renderer * renderer, const int vsync)
+{
+    GX2SetSwapInterval(vsync ? 1 : 0);
+
+    if (GX2GetSwapInterval() > 0) {
+        renderer->info.flags |= SDL_RENDERER_PRESENTVSYNC;
+    } else {
+        renderer->info.flags &= ~SDL_RENDERER_PRESENTVSYNC;
+    }
+    return 0;
+}
+
 void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
 {
     WIIU_RenderData *data = (WIIU_RenderData *) renderer->driverdata;
@@ -64,30 +76,6 @@ void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
     /* TV and DRC can now be enabled after the first frame was drawn */
     GX2SetTVEnable(TRUE);
     GX2SetDRCEnable(TRUE);
-
-    /* Wait for V-sync, unless we're running late (adaptive V-sync) */
-    if (renderer->info.flags & SDL_RENDERER_PRESENTVSYNC) {
-        uint32_t swap_count, flip_count;
-        OSTime last_flip, last_vsync;
-        uint32_t wait_count = 0;
-
-        while (true) {
-            GX2GetSwapStatus(&swap_count, &flip_count, &last_flip, &last_vsync);
-
-            if ((int32_t)(data->next_flip - flip_count) <= 0) {
-                data->next_flip = flip_count + 1;
-                break;
-            }
-
-            if (wait_count >= 10) {
-                /* GPU timed out */
-                break;
-            }
-
-            wait_count++;
-            GX2WaitForVsync();
-        }
-    }
 
     /* Free the list of render and draw data */
     WIIU_FreeRenderData(data);
