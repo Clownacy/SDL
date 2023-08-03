@@ -39,8 +39,8 @@ SDL_SYS_OpenURL(const char *url)
     } else {
         SysAppBrowserArgs args;
 
-        args.stdArgs.anchor = NULL;
-        args.stdArgs.anchorSize = 0;
+        args.stdArgs.argString = NULL;
+        args.stdArgs.size = 0;
         args.url = url_copy;
         args.urlSize = url_length;
 
